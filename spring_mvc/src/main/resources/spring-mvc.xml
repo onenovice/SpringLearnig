@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+">
+
+<!--    Controller组件扫描:controller包-->
+<!--    需要在web.xml的前端控制器加上
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>classpath:spring-mvc.xml</param-value>
+        </init-param>
+    告知需要将此配置载入
+-->
+    <context:component-scan base-package="com.controller"/>
+    <!--使得返回对象转换为json格式字符串(或者使用mvc注解驱动) -->
+<!--
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+        <property name="messageConverters">
+            <list>
+                <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"></bean>
+            </list>
+        </property>
+    </bean>
+-->
+
+    <!--mvc注解驱动（以后此文件先写此驱动放置忘记）-->
+    <!-- conversion-service属性和日期转换器id绑定 ,否则不写  -->
+    <mvc:annotation-driven conversion-service="conversionService"/>
+
+    <!--开放静态资源访问-->
+    <mvc:resources mapping="/js/**" location="/js/"/><!--告诉Spring容器怎么找-->
+
+<!--    或者Spring找不到时交给原始容器处理，即交给tomcat处理-->
+<!--    <mvc:default-servlet-handler/>-->
+
+<!--    声明转换器-->
+    <bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
+        <property name="converters">
+            <list>
+                <bean class="com.converter.DateConverter"></bean>
+            </list>
+        </property>
+    </bean>
+
+    <!--文件上传配置-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!--上传文件总大小-->
+        <property name="maxUploadSize" value="5242800"/>
+        <!--上传单个文件大小-->
+        <property name="maxUploadSizePerFile" value="5242800"/>
+        <!--上传文件的编码类型-->
+        <property name="defaultEncoding" value="UTF-8"/>
+    </bean>
+
+
+</beans>

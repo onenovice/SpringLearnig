@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <!--    默认scope是singleton-->
+    <bean id="userDao" class="com.dao.impl.UserDaoImpl" init-method="init" destroy-method="destroy">
+        <!--        普通属性注入
+                <property name="username" value="张三"/>
+                <property name="age" value="18"/>-->
+        <!-- 集合注入-->
+        <property name="strList">
+            <list>
+                <value>aaa</value>
+                <value>bbb</value>
+                <value>ccc</value>
+            </list>
+        </property>
+        <property name="userMap">
+            <map>
+                <entry key="u1" value-ref="user1"></entry>
+                <entry key="u2" value-ref="user2"></entry>
+            </map>
+        </property>
+        <property name="properties">
+            <props>
+                <prop key="p1">ppp1</prop>
+                <prop key="p2">ppp2</prop>
+                <prop key="p3">ppp3</prop>
+            </props>
+        </property>
+        <!-- 集合注入部分结束（包含下面user1和user2的bean部分） -->
+    </bean>
+    <bean id="user1" class="com.domain.User">
+        <property name="name" value="Tom1"></property>
+        <property name="addr" value="Beijing"></property>
+    </bean>
+    <bean id="user2" class="com.domain.User">
+        <property name="name" value="Tom2"></property>
+        <property name="addr" value="Beijing"></property>
+    </bean>
+    <!--    <bean id="userDao" class="com.dao.impl.UserDaoImpl" scope="prototype"></bean>-->
+
+    <!--    静态工厂实例化-->
+    <!--    <bean id="userDao" class="com.factory.StaticFactory" factory-method="getUserDao"></bean>-->
+    <!--动态实例创建对象，下两行-->
+    <!--    <bean id="factory" class="com.factory.DynamicFactory"></bean>-->
+    <!--    <bean id="userDao" factory-bean="factory" factory-method="getUserDao"></bean>-->
+    <!--    依赖注入-->
+    <bean id="userService" class="com.service.impl.UserServiceImpl">
+        <!--        这里的name指的是setUserDao方法的UserDao部分将首字母小写-->
+        <property name="userDao" ref="userDao"></property>
+    </bean>
+    <!--    P命名空间方式依赖注入-->
+    <!--    <bean id="userService" class="com.service.impl.UserServiceImpl" p:userDao-ref="userDao"/>-->
+    <!--    构造方法依赖注入
+    <bean id="userService" class="com.service.impl.UserServiceImpl">
+        <constructor-arg name="userDao" ref="userDao"></constructor-arg>
+    </bean>
+    -->
+
+</beans>

@@ -1,0 +1,14 @@
+package com.proxy.jdk;
+
+/**
+ * @ Description:
+ * @ Author: Jay
+ * @ Date: Create in 9:27 2021/5/11
+ * @ Version:
+ */
+public class Target implements TargetInterface {
+    @Override
+    public void save() {
+        System.out.println("save running...");
+    }
+}
