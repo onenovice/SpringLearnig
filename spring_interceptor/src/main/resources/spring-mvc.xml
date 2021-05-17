@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+">
+
+    <!--mvc注解驱动（以后此文件先写此驱动放置忘记）-->
+    <mvc:annotation-driven/>
+
+    <!--配置视图解析器-->
+<!--    形如  /index.jsp-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+
+    <!--开放静态资源访问-->
+    <mvc:default-servlet-handler/>
+
+    <!--    Controller组件扫描:controller包-->
+    <!--    需要在web.xml的前端控制器需要将此配置载入
+    -->
+    <context:component-scan base-package="com.controller"/>
+
+    <!--配置拦截器-->
+    <mvc:interceptors>
+        <mvc:interceptor>
+<!--            对哪些资源执行拦截-->
+            <mvc:mapping path="/**"/>
+            <bean class="com.interceptor.MyInterceptor1"/>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="com.interceptor.MyInterceptor2"/>
+        </mvc:interceptor>
+<!--    拦截器的执行顺序按照配置的顺序（越靠前越靠外层执行），如下
+        preHandle...
+        preHandle22...
+        目标资源执行...
+        postHandle22...
+        postHandle...
+        afterCompletion22...
+        afterCompletion...-->
+    </mvc:interceptors>
+
+
+
+
+</beans>

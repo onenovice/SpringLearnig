@@ -1677,3 +1677,165 @@ public void save23(String username, MultipartFile[] uploadFiles) throws IOExcept
 
 ## SpringMVC拦截器
 
+### 1.拦截器（Interceptor）的作用
+
+Spring MVC的拦截器类似于Servlet开发中的过滤器Filter,用于对处理器进行**预处理**和**后处理**。
+
+将拦截器按一定的顺序联结成一条链，这条链称为**拦截器链( Interceptor Chain)**。在访问可被拦截的方法或字段时，拦截器链中的拦截器就会按其之前定义的顺序被调用。拦截器也是AOP思想的具体实现。
+
+### 2.拦截器和过滤器区别
+
+|   区别   |                         过滤器                          |                            拦截器                            |
+| :------: | :-----------------------------------------------------: | :----------------------------------------------------------: |
+| 使用范围 |    是servlet规范的一部分，任何Java Web工程都可以使用    |     SpringMVC框架自己的，只有SpringMVC框架的工程可以使用     |
+| 拦截范围 | 在`url-pattern`中配置`/*`后，可以对所有要访问的资源拦截 | 只会拦截访问的控制器方法，jsp,html,css,image或js是不会拦截的 |
+
+### 3.拦截器快速入门
+
+①创建拦截器类实现HandlerInterceptorj接口
+②配置拦截器
+③测试拦截器的拦截效果
+
+```java
+/**
+    自定义拦截器
+ */
+public class MyInterceptor1 implements HandlerInterceptor {
+
+    //目标方法执行之前 执行
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        System.out.println("preHandle...");
+        String param = request.getParameter("param");
+        if("yes".equals(param)){
+            return true;
+        }else{
+            request.getRequestDispatcher("/error.jsp").forward(request,response);
+            return  false;
+        }
+        //return true;//true表示放行
+    }
+
+
+    //目标方法执行之后 视图对象返回之前 执行
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        //可以对目标进行修改
+        modelAndView.addObject("name","lisi");
+        System.out.println("postHandle...");
+
+    }
+
+    //整个流程执行完毕后 执行
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        System.out.println("afterCompletion...");
+    }
+}
+```
+
+
+
+```java
+@RequestMapping("/target")
+public ModelAndView show(){
+    System.out.println("目标资源执行...");
+    ModelAndView modelAndView = new ModelAndView();
+    modelAndView.addObject("name","zhangsan");
+    modelAndView.setViewName("index");
+    return modelAndView;
+
+}
+```
+
+spring-mvc.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+">
+
+    <!--mvc注解驱动（以后此文件先写此驱动放置忘记）-->
+    <mvc:annotation-driven/>
+    <!--配置视图解析器-->
+	<!--形如  /index.jsp-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+
+    <!--开放静态资源访问-->
+    <mvc:default-servlet-handler/>
+
+    <!--    Controller组件扫描:controller包-->
+    <!--    需要在web.xml的前端控制器将此配置载入-->
+    <context:component-scan base-package="com.controller"/>
+
+    <!--配置拦截器-->
+    <mvc:interceptors>
+        
+        <mvc:interceptor>
+			<!--对哪些资源执行拦截-->
+            <mvc:mapping path="/**"/>
+            <bean class="com.interceptor.MyInterceptor1"/>
+        </mvc:interceptor>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="com.interceptor.MyInterceptor2"/>
+            
+        </mvc:interceptor>
+<!--    拦截器的执行顺序按照配置的顺序（越靠前越靠外层执行），如下
+        preHandle...
+        preHandle22...
+        目标资源执行...
+        postHandle22...
+        postHandle...
+        afterCompletion22...
+        afterCompletion...-->
+    </mvc:interceptors>
+</beans>
+```
+
+### 4.拦截器方法说明
+
+|       方法名        |                             说明                             |
+| :-----------------: | :----------------------------------------------------------: |
+|  **`preHandle()`**  | 方法将在请求处理之前进行调用，该方法的返回值是布尔值Boolean类型的，当它返回为 false时，表示请求结束，后续的 Inteceptor和Controller都不会再执行；当返回值为true时就会继续调用下一个Interceptor的 preHandle方法 |
+|   `postHandle()`    | 该方法是在当前请求进行处理之后被调用，前提是preHandle方法的返回值为true时才能被调用，且它会在DispatcherServlet进行视图返回渲染之前被调用，所以我们可以在这个方法中对Controller处理之后的 ModelAndView对象进行操作 |
+| `afterCompletion()` | 该方法将在整个请求结束之后，也就是在DispatcherServlet渲染了对应的视之后执行，前提是preHandle方法的返回值为true时才能被调用 |
+
+## SpringMVC的异常处理机制
+
+### 1.异常处理的思路
+
+系统中异常包括两类：**预期异常**和**运行时异常RuntimeException**,前者通过捕获异常从而获取异常信息，后者主要通过规范代码开发、测试等手段减少运行时异常的发生。
+
+系统的Dao、Service、Controller出现都过throws Exception向上抛出，最后由 SpringMVC前端空制器交由异常处理进行异常处理
+
+### 2.异常处理的两种方式
+
+- 使用 SpringMVC提供的简单异常处理器SimpleMappingExceptionResolver
+- 实现 Springi的异常处理接口 HandlerExceptionResolver自定义自己的异常处理器
+
+### 3.简单异常处理器SimpleMappingExceptionResolver
+
+Springmvc已经定义好了该类型转换器，在使用时可以根据项目情兄进行相应异常与视图的映射配置
+
+![SimpleMappingExceptionResolver](https://gitee.com/onenovice/pic-of-bed/raw/master/image/SimpleMappingExceptionResolver.png)
+
+### 4.自定义异常处理步骤
+
+1. 创建异常处理器类实现 HandlerExceptionResolver
+2. 配置异常处理器
+3. 编写异常页面
+4. 测试异常跳转
+
+【图见上】
+

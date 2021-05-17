@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+">
+
+    <!--mvc注解驱动（以后此文件先写此驱动放置忘记）-->
+    <mvc:annotation-driven/>
+
+    <!--配置视图解析器-->
+    <!--    形如  /index.jsp-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+
+    <!--开放静态资源访问-->
+    <mvc:default-servlet-handler/>
+
+    <!--    Controller组件扫描:controller包-->
+    <!--    需要在web.xml的前端控制器需要将此配置载入
+    -->
+    <context:component-scan base-package="com.controller"/>
+
+<!--    配置异常处理器(和自定义异常处理器二选一)-->
+    <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+        <property name="defaultErrorView" value="error"></property>
+        <property name="exceptionMappings">
+            <map>
+                <entry key="com.exception.MyException" value="error1"></entry>
+            </map>
+        </property>
+    </bean>
+<!--    编写自定义异常处理器-->
+<!--    <bean class="com.resolver.MyExceptionResolver"></bean>-->
+
+
+
+
+<!--    使用注解要添加组件扫描-->
+    <context:component-scan base-package="com"></context:component-scan>
+
+</beans>
